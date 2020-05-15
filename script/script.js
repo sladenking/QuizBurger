@@ -5,62 +5,64 @@ window.addEventListener('DOMContentLoaded', () => {
 	const modalBlock = document.getElementById('modalBlock'),
 		questionTitle = document.getElementById('question'),
 		formAnswers = document.getElementById('formAnswers'),
-		burgerBtn = document.getElementById('burger');
+		menuButton = document.getElementById('burger');
 
-	let clientWidth = document.documentElement.clientWidth;
+	const handleWidth = () => {
+		const clientWidth = document.documentElement.clientWidth;
+		menuButton.style.display = clientWidth > 768 ? 'none' : 'flex';
+	};
 
-	if (clientWidth < 768) {
-		burgerBtn.style.display = 'flex';
-	} else {
-		burgerBtn.style.display = 'none';
-	}
-
-	window.addEventListener('resize', () => {
-		clientWidth = document.documentElement.clientWidth;
-
-		if (clientWidth < 768) {
-			burgerBtn.style.display = 'flex';
-		} else {
-			burgerBtn.style.display = 'none';
-		}
-	});
+	handleWidth();
 
 	const playTest = () => {
 		const renderQuestions = () => {
 			questionTitle.textContent = 'Какого цвета бургер вы хотите?';
+			formAnswers.innerHTML = '';
 
-			const name = 'Стандарт',
-				src = './image/burger.png';
+			const data = [
+				{ id: 'answerItem1', name: 'Стандарт', src: './image/burger.png' },
+				{ id: 'answerItem2', name: 'Черный', src: './image/burgerBlack.png' }
+			];
 
-
-			formAnswers.innerHTML = `
-			<div class="answers-item d-flex flex-column">
-				<input type="radio" id="answerItem1" name="answer" class="d-none">
-				<label for="answerItem1" class="d-flex flex-column justify-content-between">
-					<img class="answerImg" src="${src}" alt="burger">
-					<span>${name}</span>
-				</label>
-			</div>
-			`;
+			data.forEach(data => {
+				const blocks = `
+					<div class="answers-item d-flex flex-column">
+						<input type="radio" id="${data.id}" name="answer" class="d-none">
+						<label for="answerItem1" class="d-flex flex-column justify-content-between">
+							<img class="answerImg" src="${data.src}" alt="burger">
+							<span>${data.name}</span>
+						</label>
+					</div>
+					`;
+				formAnswers.insertAdjacentHTML('beforeend', blocks);
+			});
 		};
 		renderQuestions();
 	};
 
+	const showDialog = () => {
+		menuButton.classList.add('active');
+		modalBlock.classList.add('d-block');
+		playTest();
+	};
+
+	const hideDialog = () => {
+		menuButton.classList.remove('active');
+		modalBlock.classList.remove('d-block');
+	};
+
+	window.addEventListener('resize', handleWidth);
+
 	document.addEventListener('click', event => {
 		let target = event.target;
 		if (target.closest('.btnOpenModal') || target.closest('.burger')) {
-			modalBlock.classList.add('d-block');
-			burgerBtn.classList.add('active');
-			playTest();
+			showDialog();
 		} else if (target.closest('.close')) {
-			modalBlock.classList.remove('d-block');
-			burgerBtn.classList.remove('active');
+			hideDialog();
 		} else {
 			target = target.closest('.modal-dialog');
-
 			if (!target) {
-				modalBlock.classList.remove('d-block');
-				burgerBtn.classList.remove('active');
+				hideDialog();
 			}
 		}
 	});
