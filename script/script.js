@@ -8,7 +8,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		menuButton = document.getElementById('burger'),
 		prevBtn = document.getElementById('prev'),
 		nextBtn = document.getElementById('next'),
-		sendBtn = document.getElementById('send');
+		sendBtn = document.getElementById('send'),
+		modalFooter = document.getElementById('modalFooter');
 
 	const handleWidth = () => {
 		const clientWidth = document.documentElement.clientWidth;
@@ -20,6 +21,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	const playTest = () => {
 
 		let numberQuestion = 0;
+
+		const finalAnswers = [];
 
 		const questions = [
 			{
@@ -100,8 +103,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			formAnswers.innerHTML = '';
 			questions[i].answers.forEach(answers => {
 				const blocks = `
-					<div class="answers-item d-flex flex-column">
-						<input type="${questions[i].type}" id="${answers.title}" name="answer" class="d-none">
+					<div class="answers-item d-flex justify-content-center">
+						<input type="${questions[i].type}" id="${answers.title}" 
+						name="answer" class="d-none" value="${answers.title}">
 						<label for="${answers.title}" class="d-flex flex-column justify-content-between">
 							<img class="answerImg" src="${answers.url}" alt="burger">
 							<span>${answers.title}</span>
@@ -112,41 +116,91 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 		};
 
-		const renderQuestions = iQ => {
-			questionTitle.textContent = `${questions[iQ].question}`;
-			renderAnswers(iQ);
-		};
-		renderQuestions(numberQuestion);
-
-		const modalFooter = document.getElementById('modalFooter');
-
 		const checkBtns = () => {
-			if (numberQuestion !== 0) {
-				prevBtn.classList.remove('d-none');
-			} else {
-				prevBtn.classList.add('d-none');
-			}
-
-			if (numberQuestion === questions.length - 1) {
-				nextBtn.classList.add('d-none');
-				sendBtn.classList.remove('d-none');
-			} else {
+			if (numberQuestion >= 0 && numberQuestion <= questions.length - 1) {
+				if (numberQuestion !== 0) {
+					prevBtn.classList.remove('d-none');
+				} else {
+					prevBtn.classList.add('d-none');
+				}
 				nextBtn.classList.remove('d-none');
 				sendBtn.classList.add('d-none');
 			}
+
+			if (numberQuestion === questions.length) {
+				prevBtn.classList.add('d-none');
+				nextBtn.classList.add('d-none');
+				sendBtn.classList.remove('d-none');
+			} else if (numberQuestion === questions.length + 1) {
+				sendBtn.classList.add('d-none');
+			}
 		};
+
 		checkBtns();
 
+		const renderQuestions = iQ => {
+
+			if (numberQuestion >= 0 && numberQuestion <= questions.length - 1) {
+				questionTitle.textContent = `${questions[iQ].question}`;
+				renderAnswers(iQ);
+			} else if (numberQuestion === questions.length) {
+				checkBtns();
+				questionTitle.textContent = 'Спасибо за ответы';
+				formAnswers.innerHTML = `
+					<div class="form-group">
+						<label for="numberPhone">Введите свой номер телефона</label>
+						<input type="phone" class="form-control" id="numberPhone">
+					</div>
+				`;
+			} else {
+				formAnswers.textContent = 'Менеджер свяжется с вами в течении 15 минут!';
+				checkBtns();
+			}
+
+		};
+
+		renderQuestions(numberQuestion);
+
+		const checkAnswers = () => {
+			const obj = {};
+
+			const inputs = [...formAnswers.elements]
+				.filter(item => item.checked || item.id === 'numberPhone');
+
+			inputs.forEach((input, index) => {
+				if (numberQuestion >= 0 && numberQuestion <= questions.length - 1) {
+					obj[`${index}_${questions[numberQuestion].question}`] = input.value;
+				} else if (numberQuestion === questions.length) {
+					obj[`Номер телефона`] = input.value;
+				}
+			});
+
+			finalAnswers.push(obj);
+		};
+
 		modalFooter.addEventListener('click', event => {
-			if (event.target.id === 'prev') {
+
+			switch (true) {
+			case (event.target.id === 'prev'):
 				numberQuestion--;
 				checkBtns();
 				renderQuestions(numberQuestion);
-			} else if (event.target.id === 'next') {
+				break;
+			case (event.target.id === 'next'):
+				checkAnswers();
 				numberQuestion++;
 				checkBtns();
 				renderQuestions(numberQuestion);
+				break;
+			case (event.target.id === 'send'):
+				checkAnswers();
+				numberQuestion++;
+				checkBtns();
+				renderQuestions(numberQuestion);
+				console.log(finalAnswers);
+				break;
 			}
+
 		});
 
 	};
